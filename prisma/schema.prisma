@@ -1,0 +1,469 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output = "../ERD.md"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DOSEN
+  MAHASISWA
+}
+
+enum SistemKuliah {
+  REGULER
+  KARYAWAN
+  EKSEKUTIF
+}
+
+enum Pendidikan {
+  D3
+  S1
+  S2
+  S3
+}
+
+enum Grade {
+  A
+  B
+  C
+  D
+  E
+}
+
+enum NamaRuang {
+  IF_1
+  IF_2
+  IF_3
+  IF_4
+  LAB_A
+  LAB_B
+  LAB_C
+}
+
+// model user {
+//   id          String  @id @default(auto()) @map("_id") @db.ObjectId
+//   username    String
+//   password    String
+// }
+
+// model admin {
+//   id          String  @id @default(auto()) @map("_id") @db.ObjectId
+//   user        user[]
+// }
+
+// model User {
+//   id                  String  @id @default(uuid()) @map("_id") @db.ObjectId
+//   adminId             String @unique @db.ObjectId
+//   id_admin            admin @relation(fields: [adminId], references: [id])
+//   dosenId             String @unique @db.ObjectId
+//   id_dosen            dosen @relation(fields: [dosenId], references: [id])
+//   mhsId               String @unique @db.ObjectId
+//   id_mhs              mahasiswa @relation(fields: [mhsId], references: [id])
+//   // admin               admin?
+//   username            String
+//   password            String
+//   // admin               admin?
+//   // dosen               dosen?
+//   // mahasiswa           mahasiswa?
+// }
+
+model User {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  username    String  @unique
+  password    String
+  // admin        Admin?    @relation(fields: [adminId], references: [id])
+  // adminId              String @unique @db.ObjectId
+  admin       Admin?
+  dosen       Dosen?
+  mahasiswa   Mahasiswa?
+
+  // mahasiswa            Mahasiswa @relation(fields: [mahasiswaId], references: [id])
+  // mahasiswaId          String @unique
+}
+
+model Admin{
+  id                  String  @id @default(uuid()) @map("_id") @db.ObjectId
+  user                User?    @relation(fields: [userId], references: [id])
+  userId              String @unique @db.ObjectId
+  nama                String
+  role                Role @default(ADMIN)
+  
+  // user                User?
+  // account             user?
+  // username            String
+  // password            String
+  // account             user?
+  // account             user @relation(fields: [userId], references: [id])
+  // account             User @relation(fields: [userId], references: [username])
+  // userId              String @unique
+  // username            String
+  // password            String
+}
+
+model Dosen {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  user                User?    @relation(fields: [userId], references: [id])
+  userId              String @unique @db.ObjectId
+  // userId              String @unique @db.ObjectId
+  nik                 String
+  namaDosen           String
+  hp                  Int
+  // alamat              String
+  email               String  @unique
+  pendidikan          Pendidikan
+  jadwalKuliah        JadwalKuliah[]
+  // absensi             Absensi[]
+  role                Role @default(DOSEN)
+  // username            String
+  // password            String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // account             User @relation(fields: [userId], references: [username])
+  // userId              String @unique
+}
+
+model Mahasiswa {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  user                User?    @relation(fields: [userId], references: [id])
+  userId              String @unique @db.ObjectId
+  // userId              String @unique @db.ObjectId 
+  nim                 String
+  nama                String
+  hp                  Int
+  email               String  
+  alamat              String
+  jurusan             String
+  // prodi               String
+  // kurikulum           String
+  sistemKuliah        SistemKuliah
+  statusPendaftaran   String
+  tglMmsk             String
+  angkatan            String
+  kelas               String
+  semester            String
+  krs                 Krs?
+  khs                 Khs?
+  absensi             Absensi?
+  // penilaian           Penilaian[]
+  nilai               Nilai[]
+  // nilai               nilai_mk[]
+  // status              String
+  role                Role @default(MAHASISWA)
+  // username            String
+  // password            String
+  // account             user @relation(fields: [userId], references: [id])
+  // account             user?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // account             User @relation(fields: [userId], references: [username])
+  // userId              String @unique
+
+  // account             User @relation(fields: [username, password], references: [username, password])
+  // username            String
+  // password            String
+  // user                User?
+}
+
+model MataKuliah {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId 
+  kodeMk              String
+  namaMk              String
+  sks                 Int
+  krs                 Krs?
+  khs                 Khs?
+  absensi             Absensi[]
+  nilai               Nilai[]
+  // jadwalKuliah        JadwalKuliah[]
+  dosen               JadwalKuliah?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model JadwalKuliah {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId 
+  mk                  MataKuliah?    @relation(fields: [kodeMk], references: [id])
+  kodeMk              String @unique @db.ObjectId 
+  dosen               Dosen?    @relation(fields: [nik], references: [id])
+  nik                 String @unique @db.ObjectId 
+  hari                String
+  jam                 String
+}
+
+model Absensi {
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  mhs                 Mahasiswa?    @relation(fields: [nim], references: [id])
+  nim                 String @unique @db.ObjectId 
+  mk                  MataKuliah?    @relation(fields: [kodeMk], references: [id])
+  kodeMk              String @unique @db.ObjectId 
+  // dosen               Dosen?    @relation(fields: [nik], references: [id])
+  // nik                 String @unique @db.ObjectId 
+  // idMhs
+  // idMk
+  pertemuan           String
+  kehadiran           String
+}
+
+// model Penilaian {
+//   id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+//   mhs                 Mahasiswa?    @relation(fields: [nim], references: [id])
+//   nim                 String @unique @db.ObjectId 
+//   mk                  MataKuliah?    @relation(fields: [kodeMk], references: [id])
+//   kodeMk              String @unique @db.ObjectId 
+//   // idMhs
+//   // idMk                
+//   nilai               Float
+// }
+
+model Nilai {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  mhs                 Mahasiswa?    @relation(fields: [nim], references: [id])
+  nim                 String @unique @db.ObjectId 
+  mk                  MataKuliah?    @relation(fields: [kodeMk], references: [id])
+  kodeMk              String @unique @db.ObjectId 
+  absensi             Int
+  tugas               Int
+  uts                 Int
+  uas                 Int
+  grade               Grade
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Krs {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  mhs                 Mahasiswa?    @relation(fields: [nim], references: [id])
+  nim                 String @unique @db.ObjectId 
+  mk                  MataKuliah?    @relation(fields: [kodeMk], references: [id])
+  kodeMk              String @unique @db.ObjectId               
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Khs {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  mhs                 Mahasiswa?    @relation(fields: [nim], references: [id])
+  nim                 String @unique @db.ObjectId 
+  mk                  MataKuliah?    @relation(fields: [kodeMk], references: [id])
+  kodeMk              String @unique @db.ObjectId 
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt 
+}
+
+model Ruang {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  namaRuang           NamaRuang
+}
+
+// model Krs {
+//   id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+//   sks                 
+//   tgl_uts
+//   tgl_uas
+// }
+
+// model Khs {
+//   id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+//   nilai
+//   sks
+//   bobot
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------
+
+
+
+
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "mongodb"
+//   url      = env("DATABASE_URL")
+// }
+
+// enum Role {
+//   ADMIN
+//   DOSEN
+//   MAHASISWA
+// }
+
+// enum SistemKuliah {
+//   REGULER
+//   KARYAWAN
+//   EKSEKUTIF
+// }
+
+// enum Pendidikan {
+//   D3
+//   S1
+//   S2
+//   S3
+// }
+
+// enum Grade {
+//   A
+//   B
+//   C
+//   D
+//   E
+// }
+
+// // model user {
+// //   id          String  @id @default(auto()) @map("_id") @db.ObjectId
+// //   username    String
+// //   password    String
+// // }
+
+// // model admin {
+// //   id          String  @id @default(auto()) @map("_id") @db.ObjectId
+// //   user        user[]
+// // }
+
+// // model User {
+// //   id                  String  @id @default(uuid()) @map("_id") @db.ObjectId
+// //   adminId             String @unique @db.ObjectId
+// //   id_admin            admin @relation(fields: [adminId], references: [id])
+// //   dosenId             String @unique @db.ObjectId
+// //   id_dosen            dosen @relation(fields: [dosenId], references: [id])
+// //   mhsId               String @unique @db.ObjectId
+// //   id_mhs              mahasiswa @relation(fields: [mhsId], references: [id])
+// //   // admin               admin?
+// //   username            String
+// //   password            String
+// //   // admin               admin?
+// //   // dosen               dosen?
+// //   // mahasiswa           mahasiswa?
+// // }
+
+// model User {
+//   id          String  @id @default(auto()) @map("_id") @db.ObjectId
+//   username    String  @unique
+//   password    String
+//   // admin       Admin?
+//   // dosen       Dosen?
+//   // mahasiswa   Mahasiswa?
+
+//   // mahasiswa            Mahasiswa @relation(fields: [mahasiswaId], references: [id])
+//   // mahasiswaId          String @unique
+// }
+
+// model Admin{
+//   id                  String  @id @default(uuid()) @map("_id") @db.ObjectId
+//   // userId              String @unique @db.ObjectId
+//   nama                String
+//   role                Role @default(ADMIN)
+//   // account             user?
+//   // username            String
+//   // password            String
+//   // account             user?
+//   // account             user @relation(fields: [userId], references: [id])
+//   // account             User @relation(fields: [userId], references: [username])
+//   // userId              String @unique
+//   // username            String
+//   // password            String
+// }
+
+// model Dosen {
+//   id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+//   // userId              String @unique @db.ObjectId
+//   kode                String
+//   nama                String
+//   // alamat              String
+//   email               String  @unique
+//   pendidikan          Pendidikan
+//   // role                Role @default(DOSEN)
+//   username            String
+//   password            String
+//   createdAt           DateTime @default(now())
+//   updatedAt           DateTime @updatedAt
+
+//   // account             User @relation(fields: [userId], references: [username])
+//   // userId              String @unique
+// }
+
+// model Mahasiswa {
+//   id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+//   // userId              String @unique @db.ObjectId
+//   nim                 String
+//   nama                String
+//   alamat              String
+//   email               String  
+//   jurusan             String
+//   // prodi               String
+//   kurikulum           String
+//   sistem_kuliah       SistemKuliah
+//   status_pendaftaran  String
+//   tgl_msk             String
+//   angkatan            String
+//   kelas               String
+//   semester            String
+//   // nilai               nilai_mk[]
+//   // status              String
+//   // role                Role @default(MAHASISWA)
+//   // username            String
+//   // password            String
+//   // account             user @relation(fields: [userId], references: [id])
+//   // account             user?
+//   createdAt           DateTime @default(now())
+//   updatedAt           DateTime @updatedAt
+
+//   // account             User @relation(fields: [userId], references: [username])
+//   // userId              String @unique
+
+//   // account             User @relation(fields: [username, password], references: [username, password])
+//   username            String
+//   password            String
+//   // user                User?
+// }
+
+// model Mata_Kuliah {
+//   id                  String  @id @default(auto()) @map("_id") @db.ObjectId 
+//   kode                String
+//   nama                String
+//   createdAt           DateTime @default(now())
+//   updatedAt           DateTime @updatedAt
+// }
+
+// model Jadwal_Akademik {
+//   id                  String    @id @default(auto()) @map("_id") @db.ObjectId 
+//   judul               String
+//   tanggal             String
+//   deskripsi           String
+// }

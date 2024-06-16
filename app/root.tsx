@@ -7,13 +7,18 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
+import stylesheet from "~/tailwind.css";
+// import ToastComponent from "./components/toast";
 
 export const links: LinksFunction = () => [
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
+{ rel: "icon", href: "/Logo_DNBS.jpeg", type: "image/png" },
+{ rel: "stylesheet", href: stylesheet }
 ];
 
 export default function App() {
+  // const { toast: any } = useLoaderData()
   return (
     <html lang="en">
       <head>
@@ -23,6 +28,7 @@ export default function App() {
         <Links />
       </head>
       <body>
+        {/* <ToastComponent/> */}
         <Outlet />
         <ScrollRestoration />
         <Scripts />

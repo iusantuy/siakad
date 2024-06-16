@@ -6,7 +6,7 @@
 
 import { PassThrough } from "node:stream";
 
-import type { AppLoadContext, EntryContext } from "@remix-run/node";
+import type { ActionFunctionArgs, AppLoadContext, EntryContext, HandleDataRequestFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import isbot from "isbot";
@@ -21,6 +21,8 @@ export default function handleRequest(
   remixContext: EntryContext,
   loadContext: AppLoadContext
 ) {
+  // request.headers.delete('X-Powered-By')
+  // responseHeaders.delete('X-Powered-By')
   return isbot(request.headers.get("user-agent"))
     ? handleBotRequest(
         request,
@@ -34,6 +36,7 @@ export default function handleRequest(
         responseHeaders,
         remixContext
       );
+
 }
 
 function handleBotRequest(
@@ -57,7 +60,8 @@ function handleBotRequest(
           const stream = createReadableStreamFromReadable(body);
 
           responseHeaders.set("Content-Type", "text/html");
-
+          // responseHeaders.delete("X-Powered-By")
+          // responseHeaders.set("X-Powered-By", "Hugs");
           resolve(
             new Response(stream, {
               headers: responseHeaders,
@@ -134,4 +138,14 @@ function handleBrowserRequest(
 
     setTimeout(abort, ABORT_DELAY);
   });
+}
+
+export const handleDataRequest: HandleDataRequestFunction = (response: Response, {
+  request,
+  params,
+  context
+}: LoaderFunctionArgs | ActionFunctionArgs) => {
+  request.headers.delete("X-Powered-By")
+  response.headers.delete("X-Powered-By")
+  return response
 }
